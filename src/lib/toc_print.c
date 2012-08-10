@@ -135,8 +135,9 @@ void toc_print_track (FILE *fp, Track *track)
 
 	for (i = 2; i < track_get_nindex(track); i++) {
 		fprintf(fp, "INDEX ");
-		fprintf(fp, "%s\n", time_frame_to_mmssff( \
-		track_get_index(track, i) - track_get_index(track, 0) \
+		fprintf(fp, "%s\n", time_frame_to_mmssff(
+			// Indices in TOC are relative to the START
+			track_get_index(track, i) - track_get_index(track, 1)
 		));
 	}
 }

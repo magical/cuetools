@@ -134,11 +134,7 @@ track_list
 	;
 
 track
-	: new_track track_def track_statements {
-		while (2 > track_get_nindex(track)) {
-			track_add_index(track, 0);
-		}
-	}
+	: new_track track_def track_statements track_index_start track_indexes
 	;
 
 new_track
@@ -170,7 +166,7 @@ track_mode
 	| MODE2_RAW
 	;
 
-track_sub_mode	
+track_sub_mode
 	: RW
 	| RW_RAW
 	;
@@ -186,8 +182,21 @@ track_statement
 	| CD_TEXT '{' opt_nl cdtext_langs '}' '\n'
 	| track_data
 	| track_pregap
-	| track_index
 	| error '\n'
+	;
+
+track_index_start
+	: /* empty */ {
+		/* fill out indexes 0 and 1 */
+		while (2 > track_get_nindex(track)) {
+			track_add_index(track, 0);
+		}
+	}
+	;
+
+track_indexes
+	: /* empty */
+	| track_indexes track_index
 	;
 
 track_flags
@@ -254,7 +263,9 @@ track_pregap
 	;
 
 track_index
-	: INDEX time '\n' { track_add_index(track, $2); }
+	: INDEX time '\n' {
+		track_add_index(track, track_get_index(track, 1) + $2);
+	}
 	;
 
 language_map

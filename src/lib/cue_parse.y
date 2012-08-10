@@ -200,9 +200,12 @@ track_statement
 		int i = track_get_nindex(track);
 		long prev_length;
 
+		/* Indices in CUE files are relative to the start of the audio file. They do not include the zero pregap length. */
 		if (0 == i) {
 			/* first index */
 			track_set_start(track, $3);
+			track_add_index(track, 0);
+			i++;
 
 			if (NULL != prev_track && NULL == cur_filename) {
 				/* track shares file with previous track */
@@ -212,9 +215,9 @@ track_statement
 		}
 
 		for (; i <= $2; i++) {
-			track_add_index(track, \
-			track_get_zero_pre(track) + $3 \
-			- track_get_start(track));
+			track_add_index(track,
+				track_get_zero_pre(track) + $3
+				 - track_get_start(track));
 		}
 	}
 	| POSTGAP time '\n' { track_set_zero_post(track, $2); }

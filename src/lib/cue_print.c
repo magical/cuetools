@@ -12,7 +12,6 @@
 
 void cue_print_track (FILE *fp, Track *track, int trackno);
 void cue_print_cdtext (Cdtext *cdtext, FILE *fp, int istrack);
-void cue_print_index (long i, FILE *fp);
 char *filename = "";	/* last track datafile */
 long prev_length = 0;	/* last track length */
 
@@ -117,18 +116,20 @@ void cue_print_track (FILE *fp, Track *track, int trackno)
 	}
 
 	/* don't print index 0 if index 1 = 0 */
+	/* or if PREGAP has been printed */
 	if (track_get_index(track, 1) == 0) {
+		i = 1;
+	} else if (track_get_zero_pre(track) != 0) {
 		i = 1;
 	} else { 
 		i = 0;
 	}
 
 	for (; i < track_get_nindex(track); i++) {
-		fprintf(fp, "INDEX %02d ", i);
-		cue_print_index( \
-		track_get_index(track, i) \
-		+ track_get_start(track) \
-		- track_get_zero_pre(track) , fp);
+		fprintf(fp, "INDEX %02d %s\n", i,
+			time_frame_to_mmssff(
+				track_get_index(track, i) + track_get_start(track) - track_get_zero_pre(track)
+		));
 	}
 
 	if (0 != track_get_zero_post(track)) {
@@ -149,9 +150,4 @@ void cue_print_cdtext (Cdtext *cdtext, FILE *fp, int istrack)
 			fprintf(fp, " \"%s\"\n", value);
 		}
 	}
-}
-
-void cue_print_index (long i, FILE *fp)
-{
-	fprintf (fp, "%s\n", time_frame_to_mmssff(i));
 }
