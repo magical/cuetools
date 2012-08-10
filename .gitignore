@@ -1,0 +1,30 @@
+*.o
+*.a
+
+# binaries
+cuebreakpoints
+cueconvert
+cueprint
+
+# generated parsers
+toc_scan.c
+toc_parse.c
+toc_parse.h
+cue_scan.c
+cue_parse.c
+cue_parse.h
+
+# autotools junk
+Makefile
+Makefile.in
+/INSTALL
+/aclocal.m4
+/autom4te.cache/
+/config.*
+/configure
+/depcomp
+/install-sh
+/missing
+.deps/
+/stamp-h1
+/ylwrap
