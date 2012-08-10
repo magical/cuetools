@@ -105,11 +105,11 @@ void toc_print_track (FILE *fp, Track *track)
 	}
 
 	if (0 != track_get_zero_pre(track)) {
-		fprintf(fp, "ZERO ");
+		fprintf(fp, "SILENCE ");
 		fprintf(fp, "%s", time_frame_to_mmssff(track_get_zero_pre(track)));
 		fprintf(fp, "\n");
 	}
-		
+
 	fprintf(fp, "FILE ");
 	fprintf(fp, "\"%s\" ", track_get_filename(track));
 	if (0 == track_get_start(track)) {
@@ -123,7 +123,7 @@ void toc_print_track (FILE *fp, Track *track)
 	fprintf(fp, "\n");
 
 	if (0 != track_get_zero_post(track)) {
-		fprintf(fp, "ZERO ");
+		fprintf(fp, "SILENCE ");
 		fprintf(fp, "%s", time_frame_to_mmssff(track_get_zero_post(track)));
 		fprintf(fp, "\n");
 	}
