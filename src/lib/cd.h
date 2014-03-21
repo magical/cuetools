@@ -79,6 +79,9 @@ typedef struct Track Track;
 /* return pointer to CD structure */
 Cd *cd_init();
 
+/* release a CD structure and its tracks */
+void cd_delete(Cd *cd);
+
 /* dump all info from CD structure
  * in human readable format (for debugging)
  */

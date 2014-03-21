@@ -58,6 +58,22 @@ Cd *cd_init()
 	return cd;
 }
 
+void track_delete(Track *track);
+
+void cd_delete(Cd *cd)
+{
+	int i;
+
+	if (NULL != cd) {
+		free(cd->catalog);
+		cdtext_delete(cd->cdtext);
+		for (i = 0; i < cd->ntrack; i++) {
+			track_delete(cd->track[i]);
+		}
+		free(cd);
+	}
+}
+
 Track *track_init()
 {
 	Track *track = NULL;
@@ -90,6 +106,16 @@ Track *track_init()
 	}
 
 	return track;
+}
+
+void track_delete(Track *track)
+{
+	if (NULL != track) {
+		free(track->isrc);
+		cdtext_delete(track->cdtext);
+		free(track->file.name);
+		free(track);
+	}
 }
 
 /*
@@ -130,6 +156,7 @@ Track *cd_add_track(Cd *cd)
 		cd->ntrack++;
 	} else {
 		fprintf(stderr, "too many tracks\n");
+		track_delete(cd->track[cd->ntrack - 1]);
 	}
 
 	/* this will reinit last track if there were too many */

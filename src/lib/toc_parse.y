@@ -116,7 +116,7 @@ global_statements
 	;
 
 global_statement
-	: CATALOG STRING '\n' { cd_set_catalog(cd, $2); }
+	: CATALOG STRING '\n' { cd_set_catalog(cd, $2); free($2); }
 	| disc_mode '\n' { cd_set_mode(cd, $1); }
 	| CD_TEXT '{' opt_nl language_map cdtext_langs '}' '\n'
 	| error '\n'
@@ -178,7 +178,7 @@ track_statements
 
 track_statement
 	: track_flags
-	| ISRC STRING '\n' { track_set_isrc(track, $2); }
+	| ISRC STRING '\n' { track_set_isrc(track, $2); free($2); }
 	| CD_TEXT '{' opt_nl cdtext_langs '}' '\n'
 	| track_data
 	| track_pregap
@@ -227,22 +227,27 @@ track_data
 	| AUDIOFILE STRING time '\n' {
 		track_set_filename(track, $2);
 		track_set_start(track, $3);
+		free($2);
 	}
 	| AUDIOFILE STRING time time '\n' {
 		track_set_filename(track, $2);
 		track_set_start(track, $3);
 		track_set_length(track, $4);
+		free($2);
 	}
 	| DATAFILE STRING '\n' {
 		track_set_filename(track, $2);
+		free($2);
 	}
 	| DATAFILE STRING time '\n' {
 		track_set_filename(track, $2);
 		track_set_start(track, $3);
+		free($2);
 	}
 	| FIFO STRING time '\n' {
 		track_set_filename(track, $2);
 		track_set_start(track, $3);
+		free($2);
 	}
 	;
 
@@ -298,6 +303,7 @@ cdtext_defs
 cdtext_def
 	: cdtext_item STRING '\n' {
 		cdtext_set ($1, $2, cdtext);
+		free($2);
 	}
 	| cdtext_item '{' bytes '}' '\n' {
 		yyerror("binary CD-TEXT data not supported\n");
@@ -352,9 +358,14 @@ Cd *toc_parse (FILE *fp)
 	toc_yyin = fp;
 	yydebug = 0;
 
+	cd = NULL;
+	track = NULL;
+	cdtext = NULL;
+
 	if (0 == yyparse()) {
 		return cd;
 	}
 
+	cd_delete(cd);
 	return NULL;
 }

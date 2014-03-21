@@ -22,8 +22,7 @@ static Cd *cd = NULL;
 static Track *track = NULL;
 static Track *prev_track = NULL;
 static Cdtext *cdtext = NULL;
-static char *prev_filename = NULL;	/* last file in or before last track */
-static char *cur_filename = NULL;	/* last file in the last track */
+static char *prev_filename = NULL;	/* last file in or beore the last track */
 static char *new_filename = NULL;	/* last file in this track */
 %}
 
@@ -112,8 +111,8 @@ global_statements
 	;
 
 global_statement
-	: CATALOG STRING '\n' { cd_set_catalog(cd, $2); }
-	| CDTEXTFILE STRING '\n' { /* ignored */ }
+	: CATALOG STRING '\n' { cd_set_catalog(cd, $2); free($2); }
+	| CDTEXTFILE STRING '\n' { /* ignored */; free($2); }
 	| cdtext
 	| track_data
 	| error '\n'
@@ -125,7 +124,7 @@ track_data
 			yyerror("too many files specified\n");
 			free(new_filename);
 		}
-		new_filename = strdup($2);
+		new_filename = $2;
 	}
 	;
 
@@ -154,18 +153,18 @@ new_track
 		track = cd_add_track(cd);
 		cdtext = track_get_cdtext(track);
 
-		cur_filename = new_filename;
-		if (NULL != cur_filename) {
-			prev_filename = cur_filename;
+		if (NULL != new_filename) {
+			free(prev_filename);
+			prev_filename = new_filename;
+			prev_track = NULL;
 		}
+		new_filename = NULL;
 
 		if (NULL == prev_filename) {
 			yyerror("no file specified for track");
 		} else {
 			track_set_filename(track, prev_filename);
 		}
-
-		new_filename = NULL;
 	}
 	;
 
@@ -194,7 +193,7 @@ track_statements
 track_statement
 	: cdtext
 	| FLAGS track_flags '\n'
-	| TRACK_ISRC STRING '\n' { track_set_isrc(track, $2); }
+	| TRACK_ISRC STRING '\n' { track_set_isrc(track, $2); free($2); }
 	| PREGAP time '\n' { track_set_zero_pre(track, $2); }
 	| INDEX NUMBER time '\n' {
 		int i = track_get_nindex(track);
@@ -207,7 +206,7 @@ track_statement
 			track_add_index(track, 0);
 			i++;
 
-			if (NULL != prev_track && NULL == cur_filename) {
+			if (NULL != prev_track) {
 				/* track shares file with previous track */
 				prev_length = $3 - track_get_start(prev_track);
 				track_set_length(prev_track, prev_length);
@@ -238,7 +237,7 @@ track_flag
 	;
 
 cdtext
-	: cdtext_item STRING '\n' { cdtext_set ($1, $2, cdtext); }
+	: cdtext_item STRING '\n' { cdtext_set ($1, $2, cdtext); free($2); }
 	;
 
 cdtext_item
@@ -276,12 +275,27 @@ void yyerror (char *s)
 
 Cd *cue_parse (FILE *fp)
 {
+	int err;
+
 	cue_yyin = fp;
 	yydebug = 0;
 
-	if (0 == yyparse()) {
+	cd = NULL;
+	cdtext = NULL;
+	track = NULL;
+	prev_track = NULL;
+	prev_filename = NULL;
+	new_filename = NULL;
+
+	err = yyparse();
+
+	free(prev_filename);
+	free(new_filename);
+
+	if (0 == err) {
 		return cd;
 	}
 
+	cd_delete(cd);
 	return NULL;
 }
